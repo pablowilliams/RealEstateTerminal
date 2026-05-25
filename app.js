@@ -783,6 +783,7 @@ function renderTickerSelect() {
     renderDetail();
     renderStocksTable();
     renderExtraPanel();
+    renderExtra2Panel();
     announce(`Selected ${state.selectedTicker}. Metro detail loaded.`);
   });
 }
@@ -1423,6 +1424,7 @@ function startLiveTicks() {
     renderTickerTape();
     renderStocksTable();
     renderExtraPanel();
+    renderExtra2Panel();
   };
 
   // Cadence: faster while market open, slower when closed, slowest when offline
@@ -1568,6 +1570,7 @@ function selectTickerFromRow(ticker) {
   renderDetail();
   renderStocksTable();
   renderExtraPanel();
+  renderExtra2Panel();
   // Don't steal focus — just announce
   announce(`Selected ${ticker}. Detail panel updated.`);
   // Scroll detail into view for convenience but keep focus
@@ -2017,6 +2020,43 @@ function renderExtraPanel() {
   ).join("");
 }
 
+
+function renderExtra2Panel() {
+  const container = document.getElementById("extra2-content");
+  if (!container || !state.stocks) return;
+  const metro = state.stocks.find(s => s.ticker === state.selectedTicker) || state.stocks[0];
+  const piTiers = [3, 5, 7, 9, 11];
+  const dtiTiers = [28, 36, 43, 50];
+  const palette = ["#1a2029", "#b3771f", "#ffaa33", "#ffc266", "#ff3366"];
+  const glyphs = [".", "·", "=", "▲", "■"];
+  const labels = ["AFFORDABLE", "STRETCHED", "STRESSED", "SEVERE", "CRITICAL"];
+  function stress(pi, dti) {
+    const s = (pi / 12) * 0.55 + (dti / 50) * 0.45 + (metro.price / 1500) * 0.15;
+    return Math.max(0, Math.min(4, Math.round(s * 4.6)));
+  }
+  const w = 720, h = 280, padL = 90, padR = 12, padT = 30, padB = 30;
+  const cellW = (w - padL - padR) / dtiTiers.length;
+  const cellH = (h - padT - padB) / piTiers.length;
+  let cells = "";
+  const data = [];
+  for (let i = 0; i < piTiers.length; i++) {
+    cells += `<text x="${padL - 6}" y="${padT + i * cellH + cellH / 2 + 3}" text-anchor="end" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">P/I ${piTiers[i]}x</text>`;
+    for (let j = 0; j < dtiTiers.length; j++) {
+      const s = stress(piTiers[i], dtiTiers[j]);
+      const x = padL + j * cellW, y = padT + i * cellH;
+      cells += `<rect x="${x}" y="${y}" width="${cellW - 2}" height="${cellH - 2}" fill="${palette[s]}" stroke="#191c23"/>
+        <text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" text-anchor="middle" fill="${s >= 2 ? "#0a0b0e" : "#d6dce4"}" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">${glyphs[s]}</text>`;
+      data.push({ pi: piTiers[i], dti: dtiTiers[j], stress: labels[s] });
+    }
+  }
+  const colLabels = dtiTiers.map((d, j) => `<text x="${padL + j * cellW + cellW / 2}" y="20" text-anchor="middle" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">DTI ${d}%</text>`).join("");
+  container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Affordability heatmap for ${metro.name} by price-to-income ratio and debt-to-income tier. ${labels.join(', ')}.">${colLabels}${cells}</svg>`;
+  const sub = document.getElementById("extra2-subtitle");
+  if (sub) sub.textContent = `${metro.name} · median price ${priceFmt(metro.price)} · affordability stress increases diagonally toward the bottom-right.`;
+  const body = document.getElementById("extra2-data-body");
+  if (body) body.innerHTML = data.map(d => `<tr><td>${d.pi}x</td><td>${d.dti}%</td><td>${d.stress}</td></tr>`).join("");
+}
+
 // ========== Init ==========
 async function init() {
   updateConnStripOnly();
@@ -2046,6 +2086,7 @@ async function init() {
   wireKpiTilt();
   startLiveTicks();
   renderExtraPanel();
+  renderExtra2Panel();
 
   const src = result.ok ? `real Yahoo Finance data for ${result.count} tickers` : "simulated data (live feed unavailable)";
   announce(`Dashboard ready with ${src}.`);
