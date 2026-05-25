@@ -1,12 +1,12 @@
 {
-  "generatedAt": "2026-05-25T00:14:27.207Z",
+  "generatedAt": "2026-05-25T00:38:25.735Z",
   "source": "synthetic",
   "tickers": {
     "SFO": {
       "ticker": "SFO",
       "price": 1280,
       "prevClose": 1276.6657796668853,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -106,7 +106,7 @@
       "ticker": "NYC",
       "price": 845,
       "prevClose": 837.9241946102572,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -206,7 +206,7 @@
       "ticker": "AUS",
       "price": 545,
       "prevClose": 543.6231385380239,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -306,7 +306,7 @@
       "ticker": "MIA",
       "price": 605,
       "prevClose": 603.3482657167522,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -406,7 +406,7 @@
       "ticker": "PHX",
       "price": 465,
       "prevClose": 463.78784209385515,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -506,7 +506,7 @@
       "ticker": "BOS",
       "price": 785,
       "prevClose": 789.9605287579685,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -606,7 +606,7 @@
       "ticker": "SEA",
       "price": 855,
       "prevClose": 847.6968269873513,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -706,7 +706,7 @@
       "ticker": "DEN",
       "price": 615,
       "prevClose": 612.4613940166695,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -806,7 +806,7 @@
       "ticker": "NSH",
       "price": 475,
       "prevClose": 470.21878057516955,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -906,7 +906,7 @@
       "ticker": "LAX",
       "price": 935,
       "prevClose": 941.0310315824455,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -1006,7 +1006,7 @@
       "ticker": "CHI",
       "price": 365,
       "prevClose": 367.14590775359255,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [
@@ -1106,7 +1106,7 @@
       "ticker": "DFW",
       "price": 425,
       "prevClose": 429.39765743844845,
-      "ts": 1779668067207,
+      "ts": 1779669505735,
       "currency": "USD",
       "exchange": "SIM",
       "closes": [

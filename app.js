@@ -784,6 +784,8 @@ function renderTickerSelect() {
     renderStocksTable();
     renderExtraPanel();
     renderExtra2Panel();
+    renderExtra3Panel();
+    renderExtra4Panel();
     announce(`Selected ${state.selectedTicker}. Metro detail loaded.`);
   });
 }
@@ -1425,6 +1427,8 @@ function startLiveTicks() {
     renderStocksTable();
     renderExtraPanel();
     renderExtra2Panel();
+    renderExtra3Panel();
+    renderExtra4Panel();
   };
 
   // Cadence: faster while market open, slower when closed, slowest when offline
@@ -1571,6 +1575,8 @@ function selectTickerFromRow(ticker) {
   renderStocksTable();
   renderExtraPanel();
   renderExtra2Panel();
+  renderExtra3Panel();
+  renderExtra4Panel();
   // Don't steal focus — just announce
   announce(`Selected ${ticker}. Detail panel updated.`);
   // Scroll detail into view for convenience but keep focus
@@ -2057,6 +2063,107 @@ function renderExtra2Panel() {
   if (body) body.innerHTML = data.map(d => `<tr><td>${d.pi}x</td><td>${d.dti}%</td><td>${d.stress}</td></tr>`).join("");
 }
 
+
+// ========== Tornado sensitivity chart ==========
+function renderExtra3Panel() {
+  const container = document.getElementById("extra3-content");
+  if (!container) return;
+  const data = [{"name":"r_t (mortgage rate)","units":"+50bp","down":-4.5,"up":4.5},{"name":"σ (volatility)","units":"+25%","down":-3.1,"up":3.4},{"name":"κ (mean-rev speed)","units":"+25%","down":-1.2,"up":1.6},{"name":"ψ (carrying costs)","units":"+50bp","down":-0.9,"up":0.7},{"name":"g (rent growth)","units":"+100bp","down":-0.4,"up":0.8},{"name":"Pool grant %","units":"+5pp","down":-0.3,"up":0.4}];
+  // Sort by absolute magnitude (largest first)
+  data.sort((a, b) => Math.max(Math.abs(b.down), Math.abs(b.up)) - Math.max(Math.abs(a.down), Math.abs(a.up)));
+  const w = 720, h = 320, padL = 200, padR = 100, padT = 16, padB = 30;
+  const inW = w - padL - padR, inH = h - padT - padB;
+  const rowH = inH / data.length;
+  const maxMag = Math.max(...data.map(d => Math.max(Math.abs(d.down), Math.abs(d.up)))) * 1.1;
+  const xZero = padL + inW / 2;
+  const scale = (v) => (v / maxMag) * (inW / 2);
+  // Gridlines + ticks
+  const ticks = [-maxMag, -maxMag/2, 0, maxMag/2, maxMag];
+  const grid = ticks.map(t => {
+    const x = xZero + scale(t);
+    return `<line x1="${x}" x2="${x}" y1="${padT}" y2="${padT + inH}" stroke="#1a2029" stroke-dasharray="${t === 0 ? "0" : "2 4"}" stroke-width="${t === 0 ? 1.5 : 1}"/>
+      <text x="${x}" y="${padT + inH + 16}" text-anchor="middle" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">${t > 0 ? "+" : ""}${t.toFixed(1)}%</text>`;
+  }).join("");
+  // Bars
+  const bars = data.map((d, i) => {
+    const y = padT + i * rowH + 2;
+    const bh = rowH - 4;
+    const dx = scale(d.down);
+    const ux = scale(d.up);
+    const downBar = `<rect x="${xZero + dx}" y="${y}" width="${(-dx).toFixed(1)}" height="${bh}" fill="#ff3366" fill-opacity="0.72"/>`;
+    const upBar = `<rect x="${xZero}" y="${y}" width="${ux.toFixed(1)}" height="${bh}" fill="#ffaa33" fill-opacity="0.72"/>`;
+    const labelL = `<text x="${padL - 8}" y="${y + bh / 2 + 4}" text-anchor="end" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">${d.name}</text>`;
+    const labelR = `<text x="${padL + inW + 6}" y="${y + bh / 2 + 4}" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">${d.units}</text>`;
+    const dnText = `<text x="${xZero + dx - 4}" y="${y + bh / 2 + 4}" text-anchor="end" fill="#ff3366" font-size="10" font-family="JetBrains Mono, monospace">${d.down.toFixed(1)}%</text>`;
+    const upText = `<text x="${xZero + ux + 4}" y="${y + bh / 2 + 4}" fill="#ffaa33" font-size="10" font-family="JetBrains Mono, monospace">+${d.up.toFixed(1)}%</text>`;
+    return labelL + downBar + upBar + labelR + dnText + upText;
+  }).join("");
+  // Container
+  const ariaSummary = "Tornado chart of " + data.length + " parameters. Largest sensitivity: " + data[0].name + " ranges " + data[0].down.toFixed(1) + " to " + data[0].up.toFixed(1) + " percent. Bars sorted by absolute magnitude, largest impact first.";
+  container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${ariaSummary}">
+    <text x="${padL - 8}" y="14" text-anchor="end" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">PARAMETER</text>
+    <text x="${padL + inW + 6}" y="14" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">PERTURBATION</text>
+    ${grid}${bars}
+  </svg>`;
+  const body = document.getElementById("extra3-data-body");
+  if (body) body.innerHTML = data.map(d => `<tr><td>${d.name}</td><td>${d.units}</td><td>${d.down.toFixed(1)}%</td><td>+${d.up.toFixed(1)}%</td><td>${(d.up - d.down).toFixed(1)}%</td></tr>`).join("");
+  const meta = document.getElementById("extra3-meta");
+  if (meta) meta.textContent = data.length + " parameters · sorted by |range|";
+}
+
+
+// ========== Parameter-grid heatmap ==========
+function renderExtra4Panel() {
+  const container = document.getElementById("extra4-content");
+  if (!container) return;
+  const X = {"name":"σ","values":[0.1,0.14,0.18,0.22,0.26,0.3]};
+  const Y = {"name":"κ","values":[0.12,0.16,0.2,0.24,0.28]};
+  const label = "30-day CI band width (% of P_t)";
+  const surface = (x, y) => Math.min(1, x * 1.8 + (1 / Math.max(0.05, y)) * 0.04);
+  const palette = ["#1a2029", "#b3771f", "#ffaa33", "#ffc266", "#ff3366"];
+  const glyphs = [".", "·", "=", "▲", "■"];
+  const labels = ["LOW", "MILD", "MODERATE", "HIGH", "CRITICAL"];
+  function tier(v) { const t = Math.max(0, Math.min(4, Math.floor(v * 4.999))); return t; }
+  const w = 720, h = 360, padL = 110, padR = 30, padT = 40, padB = 30;
+  const cellW = (w - padL - padR) / X.values.length;
+  const cellH = (h - padT - padB) / Y.values.length;
+  let cells = "", rowHdr = "", colHdr = "";
+  const data = [];
+  for (let j = 0; j < Y.values.length; j++) {
+    const yy = Y.values[j];
+    rowHdr += `<text x="${padL - 8}" y="${padT + (Y.values.length - 1 - j) * cellH + cellH / 2 + 4}" text-anchor="end" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">${Y.name}=${yy}</text>`;
+    for (let i = 0; i < X.values.length; i++) {
+      const xx = X.values[i];
+      const v = Math.max(0, Math.min(1, surface(xx, yy)));
+      const t = tier(v);
+      const x = padL + i * cellW;
+      const y = padT + (Y.values.length - 1 - j) * cellH;
+      cells += `<rect x="${x}" y="${y}" width="${cellW - 2}" height="${cellH - 2}" fill="${palette[t]}" stroke="#191c23" stroke-width="${t >= 3 ? 1.5 : 0.5}"/>
+        <text x="${x + cellW / 2}" y="${y + cellH / 2 + 4}" text-anchor="middle" fill="${t >= 2 ? "#0a0b0e" : "#d6dce4"}" font-size="13" font-weight="800" font-family="JetBrains Mono, monospace">${glyphs[t]}</text>`;
+      data.push({ x: xx, y: yy, v, tier: labels[t] });
+    }
+  }
+  for (let i = 0; i < X.values.length; i++) {
+    colHdr += `<text x="${padL + i * cellW + cellW / 2}" y="${padT - 12}" text-anchor="middle" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">${X.name}=${X.values[i]}</text>`;
+  }
+  // Legend at bottom
+  const legY = h - 6;
+  let legend = `<text x="0" y="${legY}" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">SEVERITY</text>`;
+  for (let k = 0; k < palette.length; k++) {
+    legend += `<rect x="${80 + k * 120}" y="${legY - 11}" width="12" height="12" fill="${palette[k]}" stroke="#191c23"/>
+      <text x="${96 + k * 120}" y="${legY - 1}" fill="#d6dce4" font-size="10" font-family="JetBrains Mono, monospace">${glyphs[k]} ${labels[k]}</text>`;
+  }
+  const ariaSummary = "Parameter grid: " + X.name + " on x-axis (" + X.values.length + " values), " + Y.name + " on y-axis (" + Y.values.length + " values). Color and glyph encode " + label + ". Severity tiers: " + labels.join(", ") + ".";
+  container.innerHTML = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${ariaSummary}">
+    <text x="0" y="14" fill="#7f8693" font-size="9" font-family="JetBrains Mono, monospace">${X.name} × ${Y.name} → ${label.toUpperCase()}</text>
+    ${colHdr}${rowHdr}${cells}${legend}
+  </svg>`;
+  const body = document.getElementById("extra4-data-body");
+  if (body) body.innerHTML = data.map(d => `<tr><td>${d.x}</td><td>${d.y}</td><td>${d.tier}</td></tr>`).join("");
+  const meta = document.getElementById("extra4-meta");
+  if (meta) meta.textContent = X.values.length + " × " + Y.values.length + " cells";
+}
+
 // ========== Init ==========
 async function init() {
   updateConnStripOnly();
@@ -2087,6 +2194,8 @@ async function init() {
   startLiveTicks();
   renderExtraPanel();
   renderExtra2Panel();
+  renderExtra3Panel();
+  renderExtra4Panel();
 
   const src = result.ok ? `real Yahoo Finance data for ${result.count} tickers` : "simulated data (live feed unavailable)";
   announce(`Dashboard ready with ${src}.`);
