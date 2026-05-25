@@ -85,7 +85,7 @@
 
       <div class="strategy-bar">
         <fieldset class="strategy-fieldset">
-          <legend>Trading strategies <span class="legend-hint">pick one or more — signals combine</span></legend>
+          <legend>Forecasting strategies <span class="legend-hint">pick one or more — signals combine</span></legend>
           <div class="strategy-options" id="strategy-options"></div>
         </fieldset>
       </div>
@@ -366,6 +366,7 @@
           <nav aria-labelledby="methodology-toc-heading" class="methodology-toc">
             <h3 id="methodology-toc-heading">On this page</h3>
             <ol>
+              <li><a href="#m-abstract">Abstract</a></li>
               <li><a href="#m-model">Stochastic model</a></li>
               <li><a href="#m-calib">Calibration</a></li>
               <li><a href="#m-impl">Numerical implementation</a></li>
@@ -379,6 +380,9 @@
           </nav>
 
           <article class="methodology-article">
+            <h3 id="m-abstract">Abstract</h3>
+            <p>This dashboard implements a Monte Carlo forecasting layer over US metro housing prices. We model the median home price as a mean-reverting log-Ornstein–Uhlenbeck process whose equilibrium level is itself a function of the prevailing 30-year mortgage rate, capturing both the empirically documented slow housing cycle (<cite>Case &amp; Shiller, 1989</cite>) and the present-value rate-transmission channel (<cite>Knoll, Schularick &amp; Steger, 2017</cite>). The choice of a single-state OU specification — over a richer DSGE framework or a black-box hedonic ML — reflects a deliberate parsimony bet: most of the explainable variance at metro level is captured by drift × rate × volatility, and additional structural assumptions are weakly identified at the available data granularity. The rent-vs-buy crossover overlay extends the framework to consumer decisions under the same rate-shock simulations.</p>
+
             <h3 id="m-model">Stochastic model</h3>
             <p>Metro median home prices exhibit two empirical regularities that any credible model must reproduce: (i) <em>slow mean reversion</em> around a long-run equilibrium driven by income and supply elasticity, and (ii) <em>strong interest-rate sensitivity</em> mediated through the present value of housing services. We model the log-price as an Ornstein–Uhlenbeck process whose equilibrium level is itself a function of the prevailing mortgage rate <code>r_t</code>:</p>
       <p class="m-eq"><span role="math" aria-label="d log P sub t equals kappa times mu of r sub t minus log P sub t, times dt, plus sigma dW sub t">d log P_t = κ ( μ(r_t) − log P_t ) dt + σ dW_t</span></p>
